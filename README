@@ -1,0 +1,17 @@
+xenserver
+
+This module provides some puppetized sexy on xenserver systems
+
+It will incorporate automatic backups to disk of VMs on this system. Those backup scripts evolved [From scripts originated by Andy Burton](http://www.andy-burton.co.uk/blog/index.php/2009-11/updated-citrix-xenserver-5-5-automatic-vm-backup-scripts/)
+License
+-------
+
+
+Contact
+-------
+
+
+Support
+-------
+
+Please log tickets and issues at our [Projects site](https://github.com/wolfspyre/puppet-xenserver/issues)
