@@ -1,0 +1,822 @@
+#!/bin/bash
+
+#
+# Citrix XenServer 5.5 VM Backup Functions
+# This script contains functions used by the VM backup script
+#
+# @version	3.00
+# @created	24/11/2009
+# @lastupdated	24/11/2009
+#
+# @author	Andy Burton
+# @url		http://www.andy-burton.co.uk/blog/
+# @email	andy@andy-burton.co.uk
+#
+# References:
+# http://run.tournament.org.il/category/disk-storage/
+# http://forums.citrix.com/message.jspa?messageID=1342058
+#
+
+
+
+#
+# log_enable
+# Enable and start logging
+# @use log_enable
+# @return void
+#
+
+function log_enable
+{
+	vm_log_enabled=1
+	vm_log=()
+	log_message ""
+	log_message "Starting VM Backup"
+	log_message "------------------------------------------"
+}
+
+
+#
+# log_disable
+# Stop and disable logging
+# @use log_disable
+# @return void
+#
+
+function log_disable
+{
+	vm_log_enabled=0
+	log_message "VM Backup Ended"
+}
+
+
+#
+# log_message
+# Add message to the log
+# @use log_message "message"
+# @param string	Message
+# @return void
+#
+
+function log_message
+{
+	`echo "[$(date +%Y-%m-%d_%H-%M-%S)] $1" >>$log_path`
+}
+
+
+#
+# add_to_backup_list
+# Add a new VM to the backup list
+# @use add_to_backup_list "uuid"
+# @param string	VM uuid
+# @return void
+#
+
+function add_to_backup_list
+{
+	if [ $vm_log_enabled ]; then
+		log_message "Add to backup list: $1"
+	fi
+	
+	vm_backup_list[${#vm_backup_list[@]}]=$1
+}
+
+
+#
+# reset_backup_list
+# Remove all VMs from the backup list
+# @use reset_backup_list
+# @return void
+#
+
+function reset_backup_list
+{
+	if [ $vm_log_enabled ]; then
+		log_message "Reset backup list"
+	fi
+	
+	vm_backup_list=()
+}
+
+
+#
+# get_running_vms
+# Return array of running VM uuids
+# @use get_running_vms
+# @return array
+#
+
+function get_running_vms
+{
+	if [ $vm_log_enabled ]; then
+		log_message "Get running VMs"
+	fi
+	
+	echo=`xe vm-list power-state=running is-control-domain=false 2>>$log_path`
+	
+	if [ $? -ne 0 ]; then
+		return 1
+	fi
+	
+	echo "$echo" | grep "uuid" | awk '{print $NF}'
+	return 0
+}
+
+
+#
+# set_running_vms
+# Set running VMs in backup list
+# @use set_running_vms
+# @return void
+#
+
+function set_running_vms
+{
+	if [ $vm_log_enabled ]; then
+		log_message "Set running VMs"
+	fi
+	
+	reset_backup_list
+	
+	running_vms=`get_running_vms`
+	
+	if [ $? -ne 0 ]; then
+		if [ $vm_log_enabled ]; then
+			log_message "get_running_vms failed: $running_vms"
+		fi
+		return 1
+	fi
+	
+	for uuid in $running_vms; do
+		add_to_backup_list $uuid
+	done
+	
+	return 0
+}
+
+
+#
+# get_all_vms
+# Return array of all VM uuids
+# @use get_all_vms
+# @return array
+#
+
+function get_all_vms
+{
+	if [ $vm_log_enabled ]; then
+		log_message "Get all VMs"
+	fi
+	
+	echo=`xe vm-list is-control-domain=false 2>>$log_path`
+	
+	if [ $? -ne 0 ]; then
+		return 1
+	fi
+	
+	echo "$echo" | grep "uuid" | awk '{print $NF}'
+	return 0
+}
+
+
+#
+# set_all_vms
+# Set all VMs in backup list
+# @use set_all_vms
+# @return void
+#
+
+function set_all_vms
+{
+	if [ $vm_log_enabled ]; then
+		log_message "Set all VMs"
+	fi
+	
+	reset_backup_list
+	
+	all_vms=`get_all_vms`
+	
+	if [ $? -ne 0 ]; then
+		if [ $vm_log_enabled ]; then
+			log_message "get_all_vms failed: $all_vms"
+		fi
+		return 1
+	fi
+	
+	for uuid in $all_vms; do
+		add_to_backup_list $uuid
+	done
+	
+	return 0
+}
+
+
+#
+# backup_vm_list
+# Backup VMs in vm_backup_list
+# @use backup_vm_list
+# @return void
+#
+
+function backup_vm_list
+{
+	if [ $vm_log_enabled ]; then
+		log_message "Initialise backup of VM list"
+	fi
+	
+	for uuid in ${vm_backup_list[@]}; do
+	
+		backup_vm $uuid
+		
+		if [ $? -ne 0 ]; then
+			if [ $vm_log_enabled ]; then
+				log_message "VM $uuid backup failed"
+			fi
+		else
+			if [ $vm_log_enabled ]; then
+				log_message "VM $uuid backup succeeded"
+			fi
+		fi
+	done
+}
+
+
+#
+# backup_vm
+# Backup a VM
+# @use backup_vm "uuid"
+# @param string	uuid
+# @return void
+#
+
+function backup_vm
+{
+	if [ $vm_log_enabled ]; then
+		log_message "Backup VM $1"
+	fi
+	
+	vm_label=`get_vm_label $1`
+	
+	if [ $? -ne 0 ]; then
+		if [ $vm_log_enabled ]; then
+			log_message "get_vm_label failed: $vm_label"
+		fi
+		return 1
+	else
+		if [ $vm_log_enabled ]; then
+			log_message "get_vm_label succeeded: $vm_label"
+		fi
+	fi
+	
+	snapshot_name=$vm_label"_snapshot"
+	export_name=$vm_label"-"$date$backup_ext
+	
+	snapshot=`snapshot_vm $1 $snapshot_name`
+	
+	if [ $? -ne 0 ]; then
+		if [ $vm_log_enabled ]; then
+			log_message "snapshot_vm failed: $snapshot"
+		fi
+		return 2
+	else
+		if [ $vm_log_enabled ]; then
+			log_message "snapshot_vm succeeded: $snapshot"
+		fi
+	fi
+	
+	remove_template_result=`remove_template $snapshot`
+	
+	if [ $? -ne 0 ]; then
+		if [ $vm_log_enabled ]; then
+			log_message "remove_template failed: $remove_template_result"
+		fi
+		return 3
+	else
+		if [ $vm_log_enabled ]; then
+			log_message "remove_template succeeded: $remove_template_result"
+		fi
+	fi
+	
+	disable_ha_result=`disable_ha $snapshot`
+	
+	if [ $? -ne 0 ]; then
+		if [ $vm_log_enabled ]; then
+			log_message "disable_ha failed: $disable_ha_result"
+		fi
+		return 4
+	else
+		if [ $vm_log_enabled ]; then
+			log_message "disable_ha succeeded: $disable_ha_result"
+		fi
+	fi
+	
+	export_vm_result=`export_vm $snapshot $export_name`
+	
+	if [ $? -ne 0 ]; then
+		if [ $vm_log_enabled ]; then
+			log_message "export_vm failed: $export_vm_result"
+		fi
+		return 5
+	else
+		if [ $vm_log_enabled ]; then
+			log_message "export_vm succeeded: $export_vm_result"
+		fi
+	fi
+	
+	delete_vm_result=`delete_vm $snapshot`
+	
+	if [ $? -ne 0 ]; then
+		if [ $vm_log_enabled ]; then
+			log_message "delete_vm failed: $delete_vm_result"
+		fi
+		return 6
+	else
+		if [ $vm_log_enabled ]; then
+			log_message "delete_vm succeeded: $delete_vm_result"
+		fi
+	fi
+	
+	return 0
+}
+
+
+#
+# get_vm_label
+# Return a VM label
+# @use get_vm_label "uuid"
+# @param string	uuid
+# @return string
+#
+
+function get_vm_label
+{
+	if [ $vm_log_enabled ]; then
+		log_message "Get VM label $1"
+	fi
+	
+	echo=`xe vm-param-get param-name=name-label uuid=$1 2>>$log_path`
+	
+	if [ $? -ne 0 ]; then
+		return 1
+	fi
+	
+	echo "$echo" | tr ' ' _ | tr -d '(' | tr -d ')'
+	return 0
+}
+
+
+#
+# get_vm_vdi
+# Return a VM VDI uuid
+# @use get_vm_vdi "uuid"
+# @param string	uuid
+# @return string
+#
+
+function get_vm_vdi
+{
+	if [ $vm_log_enabled ]; then
+		log_message "Get VDI $1"
+	fi
+	
+	vm_vbds=`get_vm_vbds $1`
+	
+	if [ $? -ne 0 ]; then
+		if [ $vm_log_enabled ]; then
+			log_message "get_vm_vbds failed: $vm_vbds"
+		fi
+		return 1
+	fi
+	
+	vdi_uuids=()
+	
+	for uuid in $vm_vbds; do
+	
+		if [ $vm_log_enabled ]; then
+			log_message "VBD $uuid"
+		fi
+		
+		vbd_type=`get_vbd_type $uuid`
+		
+		if [ $? -ne 0 ]; then
+			if [ $vm_log_enabled ]; then
+				log_message "get_vbd_type failed: $vbd_type"
+			fi
+			break
+		fi
+		
+		if [ $vbd_type != "CD" ]; then
+			
+			vdi_uuid=`get_vbd_vdi_list $uuid`
+			
+			if [ $? -ne 0 ]; then
+				if [ $vm_log_enabled ]; then
+					log_message "get_vbd_vdi_list failed: $vdi_uuid"
+				fi
+				break
+			else
+				if [ $vm_log_enabled ]; then
+					log_message "VDI: $vdi_uuid"
+				fi
+			fi
+			
+			vdi_snapshot=`check_vdi_is_snapshot $vdi_uuid`
+			
+			if [ $? -ne 0 ]; then
+				if [ $vm_log_enabled ]; then
+					log_message "check_vdi_is_snapshot failed: $vdi_snapshot"
+				fi
+				break
+			fi
+			
+			if [ $vm_log_enabled ]; then
+				log_message "Add VDI to deletion list: $vdi_uuid"
+			fi
+			
+			vdi_uuids[${#vdi_uuids[@]}]=$vdi_uuid
+			
+		else
+			if [ $vm_log_enabled ]; then
+				log_message "VDI is a CD, skipping: $uuid"
+			fi
+		fi
+		
+	done
+	
+	echo ${vdi_uuids[@]}
+	return 0
+}
+
+
+#
+# get_vm_vbds
+# Return a VM VBD uuid list
+# @use get_vm_vbd "uuid"
+# @param string	uuid
+# @return array
+#
+
+function get_vm_vbds
+{
+	if [ $vm_log_enabled ]; then
+		log_message "Get VBD $1"
+	fi
+	
+	echo=`xe vbd-list vm-uuid=$1 2>>$log_path`
+	
+	if [ $? -ne 0 ]; then
+		return 1
+	fi
+	
+	echo "$echo" | grep ^uuid | awk '{print $NF}'
+	return 0
+}
+
+
+#
+# get_vbd_type
+# Return VBD type
+# @use get_vbd_type "uuid"
+# @param string	uuid
+# @return string
+#
+
+function get_vbd_type
+{
+	if [ $vm_log_enabled ]; then
+		log_message "Get VBD type $1"
+	fi
+	
+	echo=`xe vbd-param-get param-name=type uuid=$1 2>>$log_path`
+	
+	if [ $? -ne 0 ]; then
+		return 1
+	fi
+	
+	echo "$echo"
+	return 0
+}
+
+
+#
+# get_vbd_vdi_list
+# Return VDI uuids for VBD
+# @use get_vbd_vdi_list "uuid"
+# @param string	uuid
+# @return array
+#
+
+function get_vbd_vdi_list
+{
+	if [ $vm_log_enabled ]; then
+		log_message "Get VBD VDI list $1"
+	fi
+	
+	echo=`xe vdi-list vbd-uuids=$1 2>>$log_path`
+	
+	if [ $? -ne 0 ]; then
+		return 1
+	fi
+	
+	echo "$echo" | grep ^uuid | awk '{print $NF}'
+	return 0
+}
+
+
+#
+# check_vdi_is_snapshot
+# Check a VDI is for a snapshot
+# @use check_vdi_is_snapshot "uuid"
+# @param string	uuid
+# @return boolean
+#
+
+function check_vdi_is_snapshot
+{
+	if [ $vm_log_enabled ]; then
+		log_message "Check VDI is a snapshot $1"
+	fi
+	
+	echo=`xe vdi-param-get param-name=is-a-snapshot uuid=$1 2>>$log_path`
+	
+	if [ $? -ne 0 ]; then
+		return 1
+	fi
+	
+	echo "$echo"
+	return 0
+}
+
+
+#
+# snapshot_vm
+# Snapshot a VM with quiesce if possible
+# @use snapshot_vm "uuid"
+# @param string	uuid
+# @param string	label
+# @return boolean
+#
+
+function snapshot_vm
+{
+	if [ $vm_log_enabled ]; then
+		log_message "Snapshotting VM $1"
+	fi
+	
+	snapshot_uuid=`snapshot_vm_quiesce $1 $2`
+	
+	if [ $? -ne 0 ]; then
+	
+		if [ $vm_log_enabled ]; then
+			log_message "Quiesce snapshot failed: $snapshot_uuid"
+			log_message "Attempting normal snapshot"
+		fi
+		
+		snapshot_uuid=`snapshot_vm_normal $1 $2`
+		
+		if [ $? -ne 0 ]; then
+			if [ $vm_log_enabled ]; then
+				log_message "Normal snapshot failed: $snapshot_uuid"
+			fi
+			return 1
+		fi
+		
+	fi
+	
+	echo $snapshot_uuid
+	return 0
+}
+
+
+#
+# snapshot_vm_normal
+# Snapshot a VM
+# @use snapshot_vm_normal "uuid" "label"
+# @param string	uuid
+# @param string	label
+# @return boolean
+#
+
+function snapshot_vm_normal
+{
+	if [ $vm_log_enabled ]; then
+		log_message "Snapshot $1 as $2"
+	fi
+	
+	echo=`xe vm-snapshot vm=$1 new-name-label=$2 2>>$log_path`
+	
+	if [ $? -ne 0 ]; then
+		return 1
+	fi
+	
+	echo "$echo"
+	return 0
+}
+
+
+#
+# snapshot_vm_quiesce
+# Snapshot a VM with quiesce
+# @use snapshot_vm_quiesce "uuid" "label"
+# @param string	uuid
+# @param string	label
+# @return boolean
+#
+
+function snapshot_vm_quiesce
+{
+	if [ $vm_log_enabled ]; then
+		log_message "Snapshot with quiesce $1 as $2"
+	fi
+	
+	echo=`xe vm-snapshot-with-quiesce vm=$1 new-name-label=$2 2>>$log_path`
+	
+	if [ $? -ne 0 ]; then
+		return 1
+	fi
+	
+	echo "$echo"
+	return 0
+}
+
+
+#
+# export_vm
+# Export a VM to a destination file
+# @use export_vm "uuid" "filename.xva"
+# @param string	uuid
+# @param string	filename
+# @return boolean
+#
+
+function export_vm
+{
+	if [ $vm_log_enabled ]; then
+		log_message "Export VM $1 as $2"
+	fi
+	
+	echo=`xe vm-export vm=$1 filename="$backup_dir$2" 2>>$log_path`
+	
+	if [ $? -ne 0 ]; then
+		return 1
+	fi
+	
+	echo "$echo"
+	return 0
+}
+
+
+#
+# disable_ha
+# Disable high availability
+# @use disable_ha "uuid"
+# @param string	uuid
+# @return boolean
+#
+
+function disable_ha
+{
+	if [ $vm_log_enabled ]; then
+		log_message "Disable HA $1"
+	fi
+	
+	echo=`xe template-param-set ha-always-run=false uuid=$1 2>>$log_path`
+	
+	if [ $? -ne 0 ]; then
+		return 1
+	fi
+	
+	echo "$echo"
+	return 0
+}
+
+
+#
+# remove_template
+# Remove template param from VM
+# @use remove_template "uuid"
+# @param string	uuid
+# @return boolean
+#
+
+function remove_template
+{
+	if [ $vm_log_enabled ]; then
+		log_message "Remove template status $1"
+	fi
+	
+	echo=`xe template-param-set is-a-template=false uuid=$1 2>>$log_path`
+	
+	if [ $? -ne 0 ]; then
+		return 1
+	fi
+	
+	echo "$echo"
+	return 0
+}
+
+
+#
+# delete_vm
+# Delete a VM
+# @use delete_vm "uuid"
+# @param string	uuid
+# @return boolean
+#
+
+function delete_vm
+{
+	if [ $vm_log_enabled ]; then
+		log_message "Delete VM $1"
+	fi
+	
+	vdi_uuid=`get_vm_vdi $1`
+	
+	if [ $? = 0 ] && [ ${#vdi_uuid[@]} > 0 ]; then
+		
+		for uuid in $vdi_uuid; do
+		
+			destroy_vdi_result=`destroy_vdi $uuid`
+
+			if [ $? -ne 0 ]; then
+				if [ $vm_log_enabled ]; then
+					log_message "Cannot destroy: $vdi_uuid"
+				fi
+			else
+				if [ $vm_log_enabled ]; then
+					log_message "VDI destroyed: $vdi_uuid"
+				fi
+			fi
+			
+		done
+		
+	else
+	
+		if [ $vm_log_enabled ]; then
+			log_message "Cannot get VDI uuid: $vdi_uuid"
+		fi
+		
+	fi
+	
+	vm_uninstall_result=`uninstall_vm $1`
+	
+	if [ $? -ne 0 ]; then
+		if [ $vm_log_enabled ]; then
+			log_message "Cannot uninstall VM: $vm_uninstall_result"
+		fi
+		return 1
+	fi
+	
+	return 0
+	
+}
+
+
+#
+# uninstall_vm
+# Uninstall (remove) a VM
+# @use uninstall_vm "uuid"
+# @param string	uuid
+# @return boolean
+#
+
+function uninstall_vm
+{
+	if [ $vm_log_enabled ]; then
+		log_message "Uninstall VM $1"
+	fi
+	
+	echo=`xe vm-uninstall force=true uuid=$1 2>>$log_path`
+	
+	if [ $? -ne 0 ]; then
+		return 1
+	fi
+	
+	echo "$echo"
+	return 0
+}
+
+
+#
+# destroy_vdi
+# Destroy a VDI
+# @use destroy_vdi "uuid"
+# @param string	uuid
+# @return boolean
+#
+
+function destroy_vdi
+{
+	if [ $vm_log_enabled ]; then
+		log_message "Destroy VDI $1"
+	fi
+	
+	echo=`xe vdi-destroy uuid=$1 2>>$log_path`
+	
+	if [ $? -ne 0 ]; then
+		return 1
+	fi
+	
+	echo "$echo"
+	return 0
+}
