@@ -6,10 +6,14 @@
 #
 # Document parameters here.
 #
-# [*sample_parameter*]
-#   Explanation of what this parameter affects and what it defaults to.
-#   e.g. "Specify one or more upstream ntp servers as an array."
+# [*backup*]
+#   Whether or not to enable local (or nfs) backups.
 #
+# [*log_dir*]
+#   The directory our logfiles should use by default
+#
+# [*use_logrotate*]
+#   Whether or not to use the logrotate defined type to automatically setup log rotation for our files
 # === Variables
 #
 # Here you should define a list of variables that this module would require.
@@ -35,7 +39,28 @@
 #
 # Copyright 2011 Your name here, unless otherwise noted.
 #
-class xenserver {
+class xenserver(
+  $backup        = false,
+  $log_dir       = '/usr/local/log',
+  $use_logrotate = false,
+  ) {
+  include xenserver::package
+  include xenserver::service
+  include xenserver::config
+  #take advantage of the Anchor pattern
+  anchor{'xenserver::begin':
+    before => Class['xenserver::package'],
+  }
+  Class['xenserver::package'] -> Class['xenserver::config']
+  Class['xenserver::package'] -> Class['xenserver::service']
+  Class['xenserver::config']  -> Class['xenserver::service']
 
+  anchor {'xenserver::end':
+    require => [
+      Class['xenserver::package'],
+      Class['xenserver::config'],
+      Class['xenserver::service'],
+    ],
+  }
 
 }
