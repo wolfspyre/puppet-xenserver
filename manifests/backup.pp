@@ -15,8 +15,17 @@
 # [*cluster_prettyname*]
 #   The name to use in the email messages. Defaults to hostname.
 #
+# [*device*]
+#    The block (or network) device to mount.
+#
 # [*enable_email*]
 #   whether or not to send notification emails
+#
+# [*manage_mountpoint*]
+#    whether or not to manage the mountpoint via puppet
+#
+# [*mountpoint*]
+#    The directory the device should be mounted
 #
 #  [*recipient*]
 #    The address to send emails to
@@ -50,7 +59,11 @@ class xenserver::backup(
   $audit_logfile      = "${xenserver::log_file}/audit_${::hostname}.log",
   $backup             = false,
   $cluster_prettyname = $::hostname,
+  $device             = '/dev/sdb1',
   $enable_email       = true,
+  $fstype             = 'ext3',
+  $manage_mountpoint  = false,
+  $mountpoint         = '/backup',
   $recipient          = 'root@localhost',
   ) {
   include xenserver::backup::service
