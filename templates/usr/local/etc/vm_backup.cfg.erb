@@ -1,5 +1,13 @@
+<%
+enable_logs  = scope.lookupvar(xenserver::backup::enable_logs)
+log_dir      = scope.lookupvar(xenserver::backup::log_dir)
+mountpoint   = scope.lookupvar(xenserver::backup::mountpoint)
+state_toggle = scope.lookupvar(xenserver::backup::state_toggle)
+uuids        = scope.lookupvar(xenserver::backup::uuids)
+-%>
 #!/bin/bash
 
+#This file managed by puppet. Manual changes will be reverted.
 #
 # Citrix XenServer 5.5 VM Backup Config
 # This script contains config settings used by the VM backup script
@@ -13,33 +21,26 @@
 # @email	andy@andy-burton.co.uk
 #
 
-
-
 #
 # Settings
 #
 
-
 # Set log path
-
-log_path="/home/backup/vm_backup.log"
-
+log_path="<%=log_dir-%>/vm_backup.log"
 
 # Enable logging
 # Remove to disable logging
-
+<%if log_enable -%>
 log_enable
-
-
+<%else -%>
+#log_enable
+<%end%>
 # Local backup directory
 # You can link this to a Windows CIFS share using the blog article
-
-backup_dir="/backup/"
-
+backup_dir="<%=mountpoint-%>"
 
 # Backup extension
 # .xva is the default Citrix template/vm extension
-
 backup_ext=".xva"
 
 
@@ -49,7 +50,7 @@ backup_ext=".xva"
 # "list" - Backup all VMs in the backup list (see below)
 # "none" - Don't backup any VMs, this is the default
 
-backup_vms="running"
+backup_vms="<%=state_toggle-%>"
 
 
 # VM backup list
@@ -58,7 +59,11 @@ backup_vms="running"
 
 # Example:
 # add_to_backup_list "2844954f-966d-3ff4-250b-638249b66313"
-
+<%if state_toggle == 'list' -%>
+<% uuids.flatten.each do |uuid| -%>
+add_to_backup_list "<%=uuid-%>"
+<%end-%>
+<%end-%>
 
 # Current Date
 # This is appended to the backup file name and the format can be changed here

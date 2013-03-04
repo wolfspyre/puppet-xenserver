@@ -1,0 +1,26 @@
+<% cluster  = scope.lookupvar(xenserver::backup::cluster_prettyname)
+hypervisors = scope.lookupvar(xenserver::backup::hypervisors)
+logfile     = scope.lookupvar(xenserver::backup::audit_logfile)
+mountpoint  = scope.lookupvar(xenserver::backup::mountpoint)
+send        = scope.lookupvar(xenserver::backup::enable_email)
+-%>
+#!/bin/bash
+#This script managed by puppet. Manual changes will be reverted
+
+rm -f <%=mountpoint-%>/<%=cluster-%>-metadata.bak
+<% hypervisors.flatten.each do |host| -%>
+rm -f <%=mountpoint-%>/<%=host-%>-host-backup.bak
+<%end-%>
+
+/opt/xensource/bin/xe pool-dump-database file-name=<%=mountpoint-%>/<%=cluster-%>-metadata.bak
+<% hypervisors.flatten.each do |host| -%>
+/opt/xensource/bin/xe host-backup file-name=/mnt/backup/<%=host-%>-host-backup.bak host=<%=host-%>
+<%end-%>
+rm -f /tmp/metadatamessage.tmp
+<% if send -%>
+/bin/cat /usr/local/etc/mailheader.txt > /tmp/metadatamessage.tmp
+/bin/echo "Subject: Metadata backed up for <%=cluster%>" >> /tmp/metadatamessage.tmp
+/bin/echo "Here is the cleanuplog from the Xen Cluster" >> /tmp/metadatamessage.tmp
+/bin/ls  <%=mountpoint-%>/*.bak >> /tmp/metadatamessage.tmp
+/usr/sbin/ssmtp  <%=address-%> < /tmp/metadatamessage.tmp&& rm /tmp/metadatamessage.tmp
+<%end -%>

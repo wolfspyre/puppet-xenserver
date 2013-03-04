@@ -9,8 +9,20 @@
 # [*backup*]
 #   Whether or not to enable local (or nfs) backups.
 #
+# [*enable_email*]
+#   whether or not to send notification emails
+#
 # [*log_dir*]
 #   The directory our logfiles should use by default
+#
+# [*mail_hostname*]
+#   The hostname to use in ssmtp's config
+#
+# [*mailhub*]
+#   The mailserver to tell ssmtp to deliver mail to. Must be set if enable_email is true.
+#
+#  [*recipient*]
+#    The address to send emails to
 #
 # [*use_logrotate*]
 #   Whether or not to use the logrotate defined type to automatically setup log rotation for our files
@@ -41,7 +53,11 @@
 #
 class xenserver(
   $backup        = false,
+  $enable_email  = true,
   $log_dir       = '/usr/local/log',
+  $mail_hostname = $::fqdn,
+  $mailhub       = undef,
+  $recipient     = 'root@localhost',
   $use_logrotate = false,
   ) {
   include xenserver::package
@@ -61,6 +77,9 @@ class xenserver(
       Class['xenserver::config'],
       Class['xenserver::service'],
     ],
+  }
+  if ( ($enable_email == true) and !($mailhub) ) {
+    fail('You must provide a mailhub for ssmtp to be able to send your mail.')
   }
 
 }

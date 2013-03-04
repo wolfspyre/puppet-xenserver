@@ -13,19 +13,17 @@ class xenserver::config {
   $ensure             = $xenserver::ensure
   case $ensure {
     present, enabled, active, disabled, stopped: {
+      file{'ssmtp_conf':
+        ensure  => 'present',
+        content => template('xenserver/etc/ssmtp/ssmtp.conf.erb'),
+        group   => 'root',
+        mode    => '0644',
+        owner   => 'root',
+        path    => '/etc/ssmtp/ssmtp.conf',
+
+      }
     }#end configfiles should be present case
     absent: {
-      file {'xenserver_conf':
-        ensure  => 'absent',
-        path    =>  $configfilepath,
-      }#end xenserverd.conf file
-      file {'/etc/init.d/xenserver':
-        ensure => 'absent',
-      }#End init file
-      file {'xenserver_logfile':
-        ensure  => 'absent',
-        path    => $logfile,
-      }#end xenserver logfile file
     }#end configfiles should be absent case
     default: {
       notice "xenserver::ensure has an unsupported value of ${xenserver::ensure}."

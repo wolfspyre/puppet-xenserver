@@ -21,6 +21,9 @@
 # [*enable_email*]
 #   whether or not to send notification emails
 #
+# [*enable_logs*]
+#   Whether or not to enable logging in the vm backup script
+#
 # [*manage_mountpoint*]
 #    whether or not to manage the mountpoint via puppet
 #
@@ -29,6 +32,18 @@
 #
 #  [*recipient*]
 #    The address to send emails to
+#
+#  [*retention*]
+#   The number of copies to retain
+#
+#  [*sender*]
+#    The email address to send from.
+#
+#  [*state_toggle*]
+#    Which states of VMs to backup. supported options are 'all', 'list', 'none', and 'running'
+#
+#  [*uuids*]
+#    a hash of uuids to backup. Must be specified if state_toggle is 'list', otherwise unused.
 #
 # === Variables
 #
@@ -61,10 +76,17 @@ class xenserver::backup(
   $cluster_prettyname = $::hostname,
   $device             = '/dev/sdb1',
   $enable_email       = true,
+  $enable_logs        = true,
+  $log_dir            = '/var/log',
   $fstype             = 'ext3',
+  $hypervisors        = undef,
   $manage_mountpoint  = false,
   $mountpoint         = '/backup',
   $recipient          = 'root@localhost',
+  $retention          = '3',
+  $sender             = 'root@localhost',
+  $state_toggle       = 'running',
+  $uuids              = undef,
   ) {
   include xenserver::backup::service
   include xenserver::backup::config
@@ -82,6 +104,20 @@ class xenserver::backup(
       Class['xenserver::backup::config'],
       Class['xenserver::backup::service'],
     ],
+  }
+  case $state_toggle{
+    'all','running','none':{
+      #no sanitization needed
+    }
+    'list':{
+      #check to see if we have a list of VMs
+      if !($uuids) {
+        fail("state_toggle set to list, but no uuids were given.")
+      }
+    }
+    default:{
+      fail("unsupported value of ${state_toggle} set for state_toggle. Supported values: all, list, none, running")
+    }
   }
 
 }

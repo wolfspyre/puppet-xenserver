@@ -5,6 +5,7 @@ logfile = scope.lookupvar(xenserver::backup::audit_logfile)
 send    = scope.lookupvar(xenserver::backup::enable_email)
 -%>
 #!/bin/bash
+#This script managed by puppet. Manual changes will be reverted.
 /usr/local/bin/dbtool -a -v /var/xapi/state.db > <%=logfile%>
 rm -f /tmp/auditmessage.tmp
 <% if send -%>
