@@ -7,7 +7,9 @@ send       = scope.lookupvar('xenserver::backup::enable_email')
 -%>
 #!/bin/bash
 #This script managed by puppet. Manual changes will be reverted.
-/bin/umount <%=mountpoint%>
+/bin/mountpoint -q <%=mountpoint-%>; if [ $? -eq 0 ]; then
+  /bin/umount <%=mountpoint%>
+fi
 /bin/mount <%=mountpoint%>
 if [ $? -eq 0 ]; then
   sleep 20
@@ -28,6 +30,7 @@ end -%>
   /bin/df -h >> /tmp/cleanupmessage.tmp
   /usr/sbin/ssmtp  <%=address-%> < /tmp/cleanupmessage.tmp&& rm /tmp/cleanupmessage.tmp
 <%end -%>
+  /bin/umount <%=mountpoint%>
 else
   rm -f /tmp/cleanupmessage.tmp
 <% if send -%>
