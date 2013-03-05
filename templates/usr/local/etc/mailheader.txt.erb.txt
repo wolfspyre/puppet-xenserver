@@ -1,5 +1,0 @@
-<%sender  = scope.lookupvar(xenserver::backup::sender)
-recipeint = scope.lookupvar(xenserver::backup::recipient)
--%>
-To: <%=recipient%>
-From: <%=sender%>

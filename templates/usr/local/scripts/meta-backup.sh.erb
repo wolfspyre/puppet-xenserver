@@ -1,8 +1,9 @@
-<% cluster  = scope.lookupvar(xenserver::backup::cluster_prettyname)
-hypervisors = scope.lookupvar(xenserver::backup::hypervisors)
-logfile     = scope.lookupvar(xenserver::backup::audit_logfile)
-mountpoint  = scope.lookupvar(xenserver::backup::mountpoint)
-send        = scope.lookupvar(xenserver::backup::enable_email)
+<% address  = scope.lookupvar('xenserver::backup::recipient')
+cluster     = scope.lookupvar('xenserver::backup::cluster_prettyname')
+hypervisors = scope.lookupvar('xenserver::backup::hypervisors')
+logfile     = scope.lookupvar('xenserver::backup::audit_logfile')
+mountpoint  = scope.lookupvar('xenserver::backup::mountpoint')
+send        = scope.lookupvar('xenserver::backup::enable_email')
 -%>
 #!/bin/bash
 #This script managed by puppet. Manual changes will be reverted

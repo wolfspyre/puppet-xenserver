@@ -1,18 +1,18 @@
 <%
-address = scope.lookupvar(xenserver::backup::recipient)
-cluster = scope.lookupvar(xenserver::backup::cluster_prettyname)
-logdir  = scope.lookupvar(xenserver::backup::log_dir)
-logfile = scope.lookupvar(xenserver::backup::audit_logfile)
-send    = scope.lookupvar(xenserver::backup::enable_email)
+address = scope.lookupvar('xenserver::backup::recipient')
+cluster = scope.lookupvar('xenserver::backup::cluster_prettyname')
+logdir  = scope.lookupvar('xenserver::backup::log_dir')
+logfile = scope.lookupvar('xenserver::backup::audit_logfile')
+send    = scope.lookupvar('xenserver::backup::enable_email')
 -%>
 #!/bin/bash
 #This script managed by puppet. Manual changes will be reverted.
-/usr/local/bin/dbtool -a -v /var/xapi/state.db > <%=logdir + "/" logfile%>
+/usr/local/bin/dbtool -a -v /var/xapi/state.db > <%=logdir + "/" + logfile%>
 rm -f /tmp/auditmessage.tmp
 <% if send -%>
 /bin/cat /usr/local/etc/mailheader.txt > /tmp/auditmessage.tmp
 /bin/echo "Subject: Auditlog from <%=cluster%>" >> /tmp/auditmessage.tmp
 /bin/echo "Here is the auditlog from the Xen Cluster" >> /tmp/auditmessage.tmp
-/bin/cat <%=logdir + "/" logfile-%> >> /tmp/auditmessage.tmp
+/bin/cat <%=logdir + "/" + logfile-%> >> /tmp/auditmessage.tmp
 /usr/sbin/ssmtp  <%=address-%> < /tmp/auditmessage.tmp&& rm /tmp/auditmessage.tmp
 <%end -%>

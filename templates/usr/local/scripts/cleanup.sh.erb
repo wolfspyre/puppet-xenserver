@@ -1,8 +1,9 @@
-<% cluster = scope.lookupvar(xenserver::backup::cluster_prettyname)
-device     = scope.lookupvar(xenserver::backup::device)
-mountpoint = scope.lookupvar(xenserver::backup::mountpoint)
-retention  = scope.lookupvar(xenserver::backup::retention)
-send       = scope.lookupvar(xenserver::backup::enable_email)
+<% address = scope.lookupvar('xenserver::backup::recipient')
+cluster    = scope.lookupvar('xenserver::backup::cluster_prettyname')
+device     = scope.lookupvar('xenserver::backup::device')
+mountpoint = scope.lookupvar('xenserver::backup::mountpoint')
+retention  = scope.lookupvar('xenserver::backup::retention')
+send       = scope.lookupvar('xenserver::backup::enable_email')
 -%>
 #!/bin/bash
 #This script managed by puppet. Manual changes will be reverted.
@@ -10,8 +11,8 @@ send       = scope.lookupvar(xenserver::backup::enable_email)
 /bin/mount <%=device-%> <%=mountpoint%>
 sleep 20
 
-<% if retention > 1
- days = ( retention - 1 )
+<% if retention.to_i > 1
+ days = ( retention.to_i - 1 )
  cmd="find @mountpoint/*.xva -type f -mtime @days -delete"
 else
   #only backup one copy

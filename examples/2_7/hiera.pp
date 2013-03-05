@@ -16,10 +16,10 @@
 #xenserver::backup::device:             '/dev/sdb1'
 #xenserver::backup::enable_email:       true
 #xenserver::backup::enable_logs:        true
-#xenserver::backup::log_dir:            '/var/log'
 #xenserver::backup::fstyppe:            'ext3'
+#xenserver::backup::log_dir:            '/var/log'
 #xenserver::backup::hypervisors:
-# -"%{fqdn}"
+# - %{fqdn}
 #xenserver::backup::manage_mountpoint:  true
 #xenserver::backup::mountpoint:         '/backup'
 #xenserver::backup::mountpoint_opts:    'defaults'
@@ -45,7 +45,7 @@ class 2_7::hiera {
   $xsb_enable_email       = hiera('xenserver::backup::enable_email',       true )
   $xsb_enable_logs        = hiera('xenserver::backup::enable_logs',        true )
   $xsb_log_dir            = hiera('xenserver::backup::log_dir',            '/var/log' )
-  $xsb_backup_fstype      = hiera('xenserver::backup::fstype',             'ext3' )
+  $xsb_fstype             = hiera('xenserver::backup::fstype',             'ext3' )
   $xsb_hypervisors        = hiera('xenserver::backup::hypervisors',        undef )
   $xsb_manage_mountpoint  = hiera('xenserver::backup::manage_mountpoint',  true )
   $xsb_mountpoint         = hiera('xenserver::backup::mountpoint',         '/backup' )

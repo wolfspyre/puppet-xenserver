@@ -1,9 +1,9 @@
 <%
-enable_logs  = scope.lookupvar(xenserver::backup::enable_logs)
-log_dir      = scope.lookupvar(xenserver::backup::log_dir)
-mountpoint   = scope.lookupvar(xenserver::backup::mountpoint)
-state_toggle = scope.lookupvar(xenserver::backup::state_toggle)
-uuids        = scope.lookupvar(xenserver::backup::uuids)
+enable_logs  = scope.lookupvar('xenserver::backup::enable_logs')
+log_dir      = scope.lookupvar('xenserver::backup::log_dir')
+mountpoint   = scope.lookupvar('xenserver::backup::mountpoint')
+state_toggle = scope.lookupvar('xenserver::backup::state_toggle')
+uuids        = scope.lookupvar('xenserver::backup::uuids')
 -%>
 #!/bin/bash
 
