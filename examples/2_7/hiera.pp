@@ -22,6 +22,7 @@
 # -"%{fqdn}"
 #xenserver::backup::manage_mountpoint:  true
 #xenserver::backup::mountpoint:         '/backup'
+#xenserver::backup::mountpoint_opts:    'defaults'
 #xenserver::backup::recipient:          'root@localhost'
 #xenserver::backup::retention:          '3'
 #xenserver::backup::sender:             "root@%{fqdn}"
@@ -48,6 +49,7 @@ class 2_7::hiera {
   $xsb_hypervisors        = hiera('xenserver::backup::hypervisors',        undef )
   $xsb_manage_mountpoint  = hiera('xenserver::backup::manage_mountpoint',  true )
   $xsb_mountpoint         = hiera('xenserver::backup::mountpoint',         '/backup' )
+  $xsb_mountpoint_opts    = hiera('xenserver::backup::mountpoint_opts',    'defaults' )
   $xsb_recipient          = hiera('xenserver::backup::recipient',          'root@localhost' )
   $xsb_retention          = hiera('xenserver::backup::retention',          '3' )
   $xsb_sender             = hiera('xenserver::backup::sender',             "root@${::fqdn}" )
@@ -66,22 +68,23 @@ class 2_7::hiera {
     use_logrotate => $use_logrotate,
   }
   $xsb_params = {
-    xsb_audit_logfile      => $audit_logfile,
-    xsb_backup             => $backup,
-    xsb_cluster_prettyname => $cluster_prettyname,
-    xsb_device             => $device,
-    xsb_enable_email       => $enable_email,
-    xsb_enable_logs        => $enable_logs,
-    xsb_log_dir            => $log_dir,
-    xsb_backup_fstype      => $fstype,
-    xsb_hypervisors        => $hypervisors,
-    xsb_manage_mountpoint  => $manage_mountpoint,
-    xsb_mountpoint         => $mountpoint,
-    xsb_recipient          => $recipient,
-    xsb_retention          => $retention,
-    xsb_sender             => $sender,
-    xsb_state_toggle       => $state_toggle,
-    xsb_uuids              => $uuids,
+    xsb_audit_logfile      => $xsb_audit_logfile,
+    xsb_backup             => $xsb_backup,
+    xsb_cluster_prettyname => $xsb_cluster_prettyname,
+    xsb_device             => $xsb_device,
+    xsb_enable_email       => $xsb_enable_email,
+    xsb_enable_logs        => $xsb_enable_logs,
+    xsb_log_dir            => $xsb_log_dir,
+    xsb_backup_fstype      => $xsb_fstype,
+    xsb_hypervisors        => $xsb_hypervisors,
+    xsb_manage_mountpoint  => $xsb_manage_mountpoint,
+    xsb_mountpoint         => $xsb_mountpoint,
+    xsb_mountpoint_opts    => $xsb_mountpoint_opts,
+    xsb_recipient          => $xsb_recipient,
+    xsb_retention          => $xsb_retention,
+    xsb_sender             => $xsb_sender,
+    xsb_state_toggle       => $xsb_state_toggle,
+    xsb_uuids              => $xsb_uuids,
   }
   create_resources('class', {'xenserver'         => $xs_params  })
   create_resources('class', {'xenserver::backup' => $xsb_params })

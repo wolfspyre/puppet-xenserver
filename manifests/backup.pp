@@ -16,34 +16,37 @@
 #   The name to use in the email messages. Defaults to hostname.
 #
 # [*device*]
-#    The block (or network) device to mount.
+#   The block (or network) device to mount.
 #
 # [*enable_email*]
-#   whether or not to send notification emails
+#   Whether or not to send notification emails
 #
 # [*enable_logs*]
 #   Whether or not to enable logging in the vm backup script
 #
 # [*manage_mountpoint*]
-#    whether or not to manage the mountpoint via puppet
+#   Whether or not to manage the mountpoint via puppet
 #
 # [*mountpoint*]
-#    The directory the device should be mounted
+#   The directory the device should be mounted
 #
-#  [*recipient*]
-#    The address to send emails to
+# [*mountpoint_opts*]
+#   The options for the mountpoint
 #
-#  [*retention*]
+# [*recipient*]
+#   The address to send emails to
+#
+# [*retention*]
 #   The number of copies to retain
 #
-#  [*sender*]
-#    The email address to send from.
+# [*sender*]
+#   The email address to send from.
 #
-#  [*state_toggle*]
-#    Which states of VMs to backup. supported options are 'all', 'list', 'none', and 'running'
+# [*state_toggle*]
+#   Which states of VMs to backup. supported options are 'all', 'list', 'none', and 'running'
 #
-#  [*uuids*]
-#    a hash of uuids to backup. Must be specified if state_toggle is 'list', otherwise unused.
+# [*uuids*]
+#   A hash of uuids to backup. Must be specified if state_toggle is 'list', otherwise unused.
 #
 # === Variables
 #
@@ -82,6 +85,7 @@ class xenserver::backup(
   $hypervisors        = undef,
   $manage_mountpoint  = false,
   $mountpoint         = '/backup',
+  $mountpoint_opts    = 'defaults',
   $recipient          = 'root@localhost',
   $retention          = '3',
   $sender             = 'root@localhost',
