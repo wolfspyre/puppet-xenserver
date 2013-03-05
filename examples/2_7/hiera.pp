@@ -75,7 +75,7 @@ class 2_7::hiera {
     enable_email       => $xsb_enable_email,
     enable_logs        => $xsb_enable_logs,
     log_dir            => $xsb_log_dir,
-    backup_fstype      => $xsb_fstype,
+    fstype             => $xsb_fstype,
     hypervisors        => $xsb_hypervisors,
     manage_mountpoint  => $xsb_manage_mountpoint,
     mountpoint         => $xsb_mountpoint,
