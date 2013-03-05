@@ -96,18 +96,13 @@ class xenserver::backup(
   include xenserver::backup::config
   #take advantage of the Anchor pattern
   anchor{'xenserver::backup::begin':
-    before  => Class['xenserver::backup::package'],
+    before  => Class['xenserver::backup::config'],
     require => File['ssmtp_conf'],
   }
-  Class['xenserver::backup::package'] -> Class['xenserver::backup::config']
-  Class['xenserver::backup::package'] -> Class['xenserver::backup::service']
-  Class['xenserver::backup::config']  -> Class['xenserver::backup::service']
 
   anchor {'xenserver::backup::end':
     require => [
-      Class['xenserver::backup::package'],
       Class['xenserver::backup::config'],
-      Class['xenserver::backup::service'],
     ],
   }
   case $state_toggle{
