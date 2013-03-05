@@ -30,6 +30,12 @@ class xenserver::backup::config {
           options => $options,
         }
       }
+      #mountpoint
+      @file { $mountpoint:
+        ensure => 'directory',
+        tag    => 'xenserver_backup_mountpoint',
+      }
+      File <| tag == 'xenserver_backup_mountpoint' |>
       #scripts
       file {'/usr/local/scripts/audit.sh':
         ensure  => 'present',
