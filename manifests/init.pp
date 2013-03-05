@@ -60,22 +60,22 @@ class xenserver(
   $recipient     = 'root@localhost',
   $use_logrotate = false,
   ) {
-  include xenserver::package
-  include xenserver::service
+# include xenserver::package
+# include xenserver::service
   include xenserver::config
   #take advantage of the Anchor pattern
   anchor{'xenserver::begin':
     before => Class['xenserver::package'],
   }
-  Class['xenserver::package'] -> Class['xenserver::config']
-  Class['xenserver::package'] -> Class['xenserver::service']
+# Class['xenserver::package'] -> Class['xenserver::config']
+# Class['xenserver::package'] -> Class['xenserver::service']
   Class['xenserver::config']  -> Class['xenserver::service']
 
   anchor {'xenserver::end':
     require => [
-      Class['xenserver::package'],
+#     Class['xenserver::package'],
       Class['xenserver::config'],
-      Class['xenserver::service'],
+#     Class['xenserver::service'],
     ],
   }
   if ( ($enable_email == true) and (!($mailhub) or ($mailhub=="UNDEF")) ) {
