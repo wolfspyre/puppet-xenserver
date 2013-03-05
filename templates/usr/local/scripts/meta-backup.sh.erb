@@ -27,6 +27,7 @@ if [ $? -eq 0 ]; then
   /bin/ls  <%=mountpoint-%>/*.bak >> /tmp/metadatamessage.tmp
   /usr/sbin/ssmtp  <%=address-%> < /tmp/metadatamessage.tmp&& rm /tmp/metadatamessage.tmp
 <%end -%>
+  umount <%=mountpoint%>
 else
   rm -f /tmp/metadatamessage.tmp
 <% if send -%>
