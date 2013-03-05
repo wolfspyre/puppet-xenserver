@@ -13,7 +13,7 @@ if [ $? -eq 0 ]; then
   sleep 20
 <% if retention.to_i > 1
   days = ( retention.to_i - 1 )
-  cmd="find " + mountpoint + "/*.xva -type f -mtime " + days + " -delete"
+  cmd="find " + mountpoint + "/*.xva -type f -mtime " + days.to_s + " -delete"
 else
   #only backup one copy
   cmd="rm -f "+ mountpoint + "/*.xva"
@@ -36,3 +36,4 @@ else
   /bin/echo "Cleanup could not run. <%=mountpoint-%> could not be mounted." >> /tmp/cleanupmessage.tmp
   /usr/sbin/ssmtp  <%=address-%> < /tmp/cleanupmessage.tmp&& rm /tmp/cleanupmessage.tmp
 <%end -%>
+fi
