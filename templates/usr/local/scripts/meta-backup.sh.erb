@@ -15,7 +15,7 @@ rm -f <%=mountpoint-%>/<%=host-%>-host-backup.bak
 
 /opt/xensource/bin/xe pool-dump-database file-name=<%=mountpoint-%>/<%=cluster-%>-metadata.bak
 <% hypervisors.flatten.each do |host| -%>
-/opt/xensource/bin/xe host-backup file-name=/mnt/backup/<%=host-%>-host-backup.bak host=<%=host-%>
+/opt/xensource/bin/xe host-backup file-name=/mnt/backup/<%=host-%>-host-backup.bak host=<%=host%>
 <%end-%>
 rm -f /tmp/metadatamessage.tmp
 <% if send -%>
