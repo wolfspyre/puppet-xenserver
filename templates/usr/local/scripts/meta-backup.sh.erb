@@ -35,3 +35,4 @@ else
   /bin/echo "something's broke!" >> /tmp/metadatamessage.tmp
   /usr/sbin/ssmtp  <%=address-%> < /tmp/metadatamessage.tmp&& rm /tmp/metadatamessage.tmp
 fi
+<%end -%>

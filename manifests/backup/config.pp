@@ -8,7 +8,7 @@ class xenserver::backup::config {
   $fstype            = $xenserver::backup::fstype
   $manage_mountpoint = $xenserver::backup::manage_mountpoint
   $mountpoint        = $xenserver::backup::mountpoint
-  $options           = $xenserver::backup::options
+  $options           = $xenserver::backup::mountpoint_options
   #set some default file attributes
   File{
     before => Anchor['xenserver::end'],
