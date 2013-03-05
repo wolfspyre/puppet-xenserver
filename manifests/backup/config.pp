@@ -3,43 +3,79 @@
 #
 class xenserver::backup::config {
   #clean up our parameters
-  $ensure             = $xenserver::backup
-
+  $device            = $xenserver::backup::device
+  $ensure            = $xenserver::backup
+  $fstype            = $xenserver::backup::fstype
+  $manage_mountpoint = $xenserver::backup::manage_mountpoint
+  $mountpoint        = $xenserver::backup::mountpoint
+  $options           = $xenserver::backup::options
   #set some default file attributes
   File{
     owner  => 'root',
     group  => 'root',
+    mode   => '0700',
   } -> Anchor['xenserver::end']
   #do stuff
   case $ensure {
-    present, enabled, active, disabled, stopped: {
+    present, enabled, active, disabled, stopped, true: {
+      if $manage_mountpoint {
+        #The scripts mount and unmount the filesystem.
+        #We're just putting it here for convenience
+        mount {'backup_mountpoint':
+          device  => $device,
+          ensure  => 'present',
+          fstype  => $fstype,
+          name    => $mountpoint,
+          options => $options,
+        }
+      }
+      #scripts
+      file {'/usr/local/scripts/audit.sh':
+        ensure  => 'present',
+        content => template('xenserver/usr/local/scripts/audit.sh.erb'),
+      }
+      file {'/usr/local/scripts/backups_cleanup.sh':
+        ensure  => 'present',
+        content => template('xenserver/usr/local/scripts/cleanup.sh.erb'),
+      }
+      file {'/usr/local/scripts/meta-backup.sh':
+        ensure  => 'present',
+        content => template('xenserver/usr/local/scripts/meta-backup.sh.erb'),
+      }
+      file {'/usr/local/scripts/vm_backup.sh':
+        ensure  => 'present',
+        content => template('xenserver/usr/local/scripts/vm_backup.sh.erb'),
+      }
+      file {'/usr/local/etc/mailheader.txt':
+        ensure  => 'present',
+        content => template('xenserver/usr/local/etc/mailheader.txt.erb'),
+        mode    => '0600',
+      }
+      file {'/usr/local/etc/vm_backup.cfg':
+        ensure  => 'present',
+        content => template('xenserver/usr/local/etc/vm_backup.cfg.erb'),
+        mode    => '0600',
+      }
+      file {'/usr/local/etc/vm_backup.lib':
+        ensure  => 'present',
+        mode    => '0600',
+        source  => 'puppet:///modules/xenserver/usr/local/etc/vm_backup.lib',
+      }
+      file {'/usr/local/bin/dbtool':
+        ensure  => 'present',
+        mode    => '0700',
+        source  => 'puppet:///modules/xenserver/usr/local/bin/dbtool',
+      }
+#cronjob
 
-##scripts
-#audit.sh
-#cleanup.sh
-#meta-backup.sh
-#vm_backup.sh
-
-##etc
-#mailheader.txt
-#vm_backup.cfg
-
-##bin
-#dbtool
+#logrotate stub
 
     }#end configfiles should be present case
-    absent: {
-      file {'xenserver::backup_conf':
+    absent,false: {
+      $backup_files = ['/usr/local/scripts/audit.sh','/usr/local/scripts/backups_cleanup.sh','/usr/local/scripts/meta-backup.sh','/usr/local/scripts/vm_backup.sh','/usr/local/etc/mailheader.txt','/usr/local/etc/vm_backup.cfg','/usr/local/etc/vm_backup.lib','/usr/local/bin/dbtool']
+      file {$backup_files:
         ensure  => 'absent',
-        path    =>  $configfilepath,
-      }#end xenserver::backupd.conf file
-      file {'/etc/init.d/xenserver::backup':
-        ensure => 'absent',
-      }#End init file
-      file {'xenserver::backup_logfile':
-        ensure  => 'absent',
-        path    => $logfile,
-      }#end xenserver::backup logfile file
+      }
     }#end configfiles should be absent case
     default: {
       notice "xenserver::backup::ensure has an unsupported value of ${xenserver::backup::ensure}."
