@@ -41,7 +41,7 @@ class xenserver::backup::config {
         ensure  => 'present',
         content => template('xenserver/usr/local/scripts/audit.sh.erb'),
       }
-      file {'/usr/local/scripts/backups_cleanup.sh':
+      file {'/usr/local/scripts/cleanup.sh':
         ensure  => 'present',
         content => template('xenserver/usr/local/scripts/cleanup.sh.erb'),
       }

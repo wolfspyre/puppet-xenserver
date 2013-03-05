@@ -8,23 +8,31 @@ send       = scope.lookupvar('xenserver::backup::enable_email')
 #!/bin/bash
 #This script managed by puppet. Manual changes will be reverted.
 /bin/umount <%=mountpoint%>
-/bin/mount <%=device-%> <%=mountpoint%>
-sleep 20
-
+/bin/mount <%=mountpoint%>
+if [ $? -eq 0 ]; then
+  sleep 20
 <% if retention.to_i > 1
- days = ( retention.to_i - 1 )
- cmd="find @mountpoint/*.xva -type f -mtime @days -delete"
+  days = ( retention.to_i - 1 )
+  cmd="find " + mountpoint + "/*.xva -type f -mtime " + days + " -delete"
 else
   #only backup one copy
-  cmd="rm -f @mountpoint/*.xva"
+  cmd="rm -f "+ mountpoint + "/*.xva"
 end -%>
-<%=cmd%>
-rm -f /tmp/cleanupmessage.tmp
+  <%=cmd%>
+  rm -f /tmp/cleanupmessage.tmp
 <% if send -%>
-/bin/cat /usr/local/etc/mailheader.txt > /tmp/cleanupmessage.tmp
-/bin/echo "Subject: Cleanuplog from <%=cluster%>" >> /tmp/cleanupmessage.tmp
-/bin/echo "Here is the cleanuplog from the Xen Cluster" >> /tmp/cleanupmessage.tmp
-/bin/ls -la <%=mountpoint%> >> /tmp/cleanupmessage.tmp
-/bin/df -h >> /tmp/cleanupmessage.tmp
-/usr/sbin/ssmtp  <%=address-%> < /tmp/cleanupmessage.tmp&& rm /tmp/cleanupmessage.tmp
+  /bin/cat /usr/local/etc/mailheader.txt > /tmp/cleanupmessage.tmp
+  /bin/echo "Subject: Cleanuplog from <%=cluster%>" >> /tmp/cleanupmessage.tmp
+  /bin/echo "Here is the cleanuplog from the Xen Cluster" >> /tmp/cleanupmessage.tmp
+  /bin/ls -la <%=mountpoint%> >> /tmp/cleanupmessage.tmp
+  /bin/df -h >> /tmp/cleanupmessage.tmp
+  /usr/sbin/ssmtp  <%=address-%> < /tmp/cleanupmessage.tmp&& rm /tmp/cleanupmessage.tmp
+<%end -%>
+else
+  rm -f /tmp/cleanupmessage.tmp
+<% if send -%>
+  /bin/cat /usr/local/etc/mailheader.txt > /tmp/cleanupmessage.tmp
+  /bin/echo "Subject: <%=cluster%> could not mount backup volume" >> /tmp/cleanupmessage.tmp
+  /bin/echo "Cleanup could not run. <%=mountpoint-%> could not be mounted." >> /tmp/cleanupmessage.tmp
+  /usr/sbin/ssmtp  <%=address-%> < /tmp/cleanupmessage.tmp&& rm /tmp/cleanupmessage.tmp
 <%end -%>
