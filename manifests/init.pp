@@ -78,7 +78,7 @@ class xenserver(
       Class['xenserver::service'],
     ],
   }
-  if ( ($enable_email == true) and !($mailhub) ) {
+  if ( ($enable_email == true) and (!($mailhub) or ($mailhub=="UNDEF")) ) {
     fail('You must provide a mailhub for ssmtp to be able to send your mail.')
   }
 

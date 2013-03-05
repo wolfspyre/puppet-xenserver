@@ -71,7 +71,7 @@
 # Copyright 2011 Your name here, unless otherwise noted.
 #
 class xenserver::backup(
-  $audit_logfile      = "${xenserver::log_file}/audit_${::hostname}.log",
+  $audit_logfile      = "audit_${::hostname}.log",
   $backup             = false,
   $cluster_prettyname = $::hostname,
   $device             = '/dev/sdb1',
@@ -92,7 +92,8 @@ class xenserver::backup(
   include xenserver::backup::config
   #take advantage of the Anchor pattern
   anchor{'xenserver::backup::begin':
-    before => Class['xenserver::backup::package'],
+    before  => Class['xenserver::backup::package'],
+    require => File['ssmtp_conf'],
   }
   Class['xenserver::backup::package'] -> Class['xenserver::backup::config']
   Class['xenserver::backup::package'] -> Class['xenserver::backup::service']
