@@ -9,11 +9,11 @@
 #xenserver::mailhub:       'UNDEF'
 #xenserver::recipient:     'root@localhost'
 #xenserver::use_logrotate: false
-###############################################
+#######################################################################
 #xenserver::backup::audit_logfile:      "audit_%{hostname}.log"
 #xenserver::backup::backup:             true
 #xenserver::backup::cluster_prettyname: "%{hostname}"
-#xenserver:;backup::device:             '/dev/sdb1'
+#xenserver::backup::device:             '/dev/sdb1'
 #xenserver::backup::enable_email:       true
 #xenserver::backup::enable_logs:        true
 #xenserver::backup::log_dir:            '/var/log'
