@@ -69,7 +69,7 @@ class xenserver(
   }
 # Class['xenserver::package'] -> Class['xenserver::config']
 # Class['xenserver::package'] -> Class['xenserver::service']
-  Class['xenserver::config']  -> Class['xenserver::service']
+# Class['xenserver::config']  -> Class['xenserver::service']
 
   anchor {'xenserver::end':
     require => [
