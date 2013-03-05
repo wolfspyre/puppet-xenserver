@@ -52,6 +52,7 @@
 # Copyright 2011 Your name here, unless otherwise noted.
 #
 class xenserver(
+  $ensure        = present,
   $backup        = false,
   $enable_email  = true,
   $log_dir       = '/usr/local/log',
@@ -65,7 +66,7 @@ class xenserver(
   include xenserver::config
   #take advantage of the Anchor pattern
   anchor{'xenserver::begin':
-    before => Class['xenserver::package'],
+    before => Class['xenserver::config'],
   }
 # Class['xenserver::package'] -> Class['xenserver::config']
 # Class['xenserver::package'] -> Class['xenserver::service']

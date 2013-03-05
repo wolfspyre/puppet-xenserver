@@ -11,10 +11,11 @@ class xenserver::backup::config {
   $options           = $xenserver::backup::options
   #set some default file attributes
   File{
+    before => Anchor['xenserver::end'],
     owner  => 'root',
     group  => 'root',
     mode   => '0700',
-  } -> Anchor['xenserver::end']
+  }
   #do stuff
   case $ensure {
     present, enabled, active, disabled, stopped, true: {
