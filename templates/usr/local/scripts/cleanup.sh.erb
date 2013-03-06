@@ -30,7 +30,6 @@ end -%>
   /bin/df -h >> /tmp/cleanupmessage.tmp
   /usr/sbin/ssmtp  <%=address-%> < /tmp/cleanupmessage.tmp&& rm /tmp/cleanupmessage.tmp
 <%end -%>
-  /bin/umount <%=mountpoint%>
 else
   rm -f /tmp/cleanupmessage.tmp
 <% if send -%>

@@ -1,16 +1,17 @@
+<%mountpoint = scope.lookupvar('xenserver::backup::mountpoint') -%>
 #!/bin/bash
 #this script managed by puppet. Manual changes will be reverted.
 #
 # Citrix XenServer 5.5 VM Backup Script
 # This script provides online backup for Citrix Xenserver 5.5 virtual machines
 #
-# @version	3.01
-# @created	24/11/2009
-# @lastupdated	01/12/2009
+# @version  3.01
+# @created  24/11/2009
+# @lastupdated  01/12/2009
 #
-# @author	Andy Burton
-# @url		http://www.andy-burton.co.uk/blog/
-# @email	andy@andy-burton.co.uk
+# @author  Andy Burton
+# @url    http://www.andy-burton.co.uk/blog/
+# @email  andy@andy-burton.co.uk
 #
 
 # Load functions and config
@@ -18,48 +19,46 @@
 . "/usr/local/etc/vm_backup.lib"
 . "/usr/lcoal/etc/vm_backup.cfg"
 
+#Mount the backup volume
+/bin/mountpoint -q <%=mountpoint-%>; if [ $? -eq 0 ]; then
+  /bin/umount <%=mountpoint%>
+fi
+/bin/mount <%=mountpoint%>
+if [ $? -eq 0 ]; then
+  # Switch backup_vms to set the VM uuids we are backing up in vm_backup_list
+  case $backup_vms in
+    "all")
+      if [ $vm_log_enabled ]; then
+        log_message "Backup All VMs"
+      fi
+      set_all_vms
+    ;;
 
-# Switch backup_vms to set the VM uuids we are backing up in vm_backup_list
+    "running")
+      if [ $vm_log_enabled ]; then
+        log_message "Backup running VMs"
+      fi
+      set_running_vms
+    ;;
 
-case $backup_vms in
+    "list")
+      if [ $vm_log_enabled ]; then
+        log_message "Backup list VMs"
+      fi
+    ;;
 
-	"all")
-		if [ $vm_log_enabled ]; then
-			log_message "Backup All VMs"
-		fi
-		set_all_vms
-		;;
-
-	"running")
-		if [ $vm_log_enabled ]; then
-			log_message "Backup running VMs"
-		fi
-		set_running_vms
-		;;
-
-	"list")
-		if [ $vm_log_enabled ]; then
-			log_message "Backup list VMs"
-		fi
-		;;
-
-	*)
-		if [ $vm_log_enabled ]; then
-			log_message "Backup no VMs"
-		fi
-		reset_backup_list
-		;;
-
-esac
-
-
-# Backup VMs
-
-backup_vm_list
-
-
-# End
-
-if [ $vm_log_enabled ]; then
-	log_disable
+    *)
+      if [ $vm_log_enabled ]; then
+        log_message "Backup no VMs"
+      fi
+      reset_backup_list
+    ;;
+  esac
+  # Backup VMs
+  backup_vm_list
+  # End
+  if [ $vm_log_enabled ]; then
+    log_disable
+  fi
+  umount <%=mountpoint%>
 fi
