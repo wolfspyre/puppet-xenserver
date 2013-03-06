@@ -74,6 +74,34 @@ class xenserver::backup::config {
         source  => 'puppet:///modules/xenserver/usr/local/bin/dbtool',
       }
 #cronjob
+      cron {'backup_audit':
+        ensure  => 'present',
+        command => '/usr/local/scripts/audit.sh',
+        hour    => '23',
+        minute  => '15',
+        user    => 'root'
+      }
+      cron{'backup_metadata':
+        ensure  => 'present',
+        command => '/usr/local/scripts/meta-backup.sh',
+        hour    => '23',
+        minute  => '16',
+        user    => 'root'
+      }
+      cron{'prune_backups':
+        ensure  => 'present',
+        command => '/usr/local/scripts/cleanup.sh',
+        hour    => '23',
+        minute  => '20',
+        user    => 'root'
+      }
+      cron{'backup_vms':
+        ensure  => 'present',
+        command => '/usr/local/scripts/vm_backup.sh',
+        hour    => '23',
+        minute  => '30',
+        user    => 'root'
+      }
 
 #logrotate stub
 
@@ -82,6 +110,22 @@ class xenserver::backup::config {
       $backup_files = ['/usr/local/scripts/audit.sh','/usr/local/scripts/backups_cleanup.sh','/usr/local/scripts/meta-backup.sh','/usr/local/scripts/vm_backup.sh','/usr/local/etc/mailheader.txt','/usr/local/etc/vm_backup.cfg','/usr/local/etc/vm_backup.lib','/usr/local/bin/dbtool']
       file {$backup_files:
         ensure  => 'absent',
+      }
+      cron {'backup_audit':
+        ensure  => 'absent',
+        command => '/usr/local/scripts/audit.sh',
+      }
+      cron{'backup_metadata':
+        ensure  => 'absent',
+        command => '/usr/local/scripts/meta-backup.sh',
+      }
+      cron{'prune_backups':
+        ensure  => 'absent',
+        command => '/usr/local/scripts/cleanup.sh',
+      }
+      cron{'backup_vms':
+        ensure  => 'absent',
+        command => '/usr/local/scripts/vm_backup.sh',
       }
     }#end configfiles should be absent case
     default: {
