@@ -37,7 +37,11 @@ log_enable
 <%end%>
 # Local backup directory
 # You can link this to a Windows CIFS share using the blog article
+<% if mountpoint =~ /\/$/ -%>
 backup_dir="<%=mountpoint-%>"
+<% else -%>
+backup_dir="<%=mountpoint-%>/"
+<%end-%>
 
 # Backup extension
 # .xva is the default Citrix template/vm extension
