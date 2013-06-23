@@ -10,16 +10,31 @@ class xenserver::config {
   }
   File <| tag == 'xenserver_configuration_directories' |>
   #clean up our parameters
-  $ensure             = $xenserver::ensure
+  $app_autostart = $xenserver::app_autostart
+  $app_uuids     = $xenserver::app_uuids
+  $ensure        = $xenserver::ensure
   case $ensure {
     present, enabled, active, disabled, stopped: {
+      File{
+        ensure => 'present',
+        group  => 'root',
+        owner  => 'root',
+        mode   => '0644',
+      }
       file{'ssmtp_conf':
-        ensure  => 'present',
         content => template('xenserver/etc/ssmtp/ssmtp.conf.erb'),
-        group   => 'root',
-        mode    => '0644',
-        owner   => 'root',
         path    => '/etc/ssmtp/ssmtp.conf',
+      }
+      if $app_autostart {
+        file{'/etc/rc.autostart':
+          ensure  => 'present',
+          content => template('xenserver/etc/rc.autostart.erb'),
+          mode    => 0777,
+        }
+        exec{'add_autostart_to_rc_init':
+          command => '/bin/echo "/etc/rc.autostart" >>/etc/rc.d/rc.local',
+          unless  => '/bin/grep -c \'/etc/rc.autostart\' /etc/rc.d/rc.local',
+        }
 
       }
     }#end configfiles should be present case

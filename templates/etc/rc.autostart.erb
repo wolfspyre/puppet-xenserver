@@ -1,0 +1,14 @@
+<% autostart = scope.lookupvar('xenserver::app_autostart')
+   fqdn      = scope.lookupvar('::fqdn')
+   uuids     = scope.lookupvar('xenserver::app_uuids')
+-%>
+#!/bin/bash
+#################
+# Automatically start Xen vApps.
+# This script auto-generated for <%=fqdn-%> by Puppet
+# Manual changes will be reverted
+
+<% uuids.each do |uuid| -%>
+#Appliance <%=uuid%>
+xe appliance-start uuid=<%=uuid%>
+<%end%>
