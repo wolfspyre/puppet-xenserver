@@ -32,7 +32,7 @@ class xenserver::config {
           mode    => 0777,
         }
         exec{'add_autostart_to_rc_init':
-          command => '/bin/echo "/etc/rc.autostart" >>/etc/rc.d/rc.local',
+          command => '/bin/echo "at now + 2 minutes -f /etc/rc.autostart" >>/etc/rc.d/rc.local',
           unless  => '/bin/grep -c \'/etc/rc.autostart\' /etc/rc.d/rc.local',
         }
 
