@@ -33,6 +33,7 @@ class xenserver::backup::config {
       #mountpoint
       @file { $mountpoint:
         ensure => 'directory',
+        mode   => '0777',
         tag    => 'xenserver_backup_mountpoint',
       }
       File <| tag == 'xenserver_backup_mountpoint' |>
